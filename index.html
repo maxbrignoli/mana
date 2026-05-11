@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mana">
+<meta name="theme-color" content="#0e1029">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Mana - L'Oracolo</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Cinzel:wght@400;500;600;700&family=Italiana&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --indigo-deep: #0e1029;
+    --indigo: #1a1d3e;
+    --indigo-light: #2a2e5a;
+    --gold: #c9a961;
+    --gold-bright: #e0c178;
+    --gold-soft: #b89a5e;
+    --silver: #e8e4d0;
+    --burgundy: #5d2e46;
+    --burgundy-light: #8b3a62;
+    --cream: #f5ecd9;
+    --ink: #1a1530;
+    --success: #8db58a;
+    --error: #c47a85;
+  }
+
+  html, body {
+    background: var(--indigo-deep);
+    background-image:
+      radial-gradient(ellipse at top, rgba(201, 169, 97, 0.1), transparent 60%),
+      radial-gradient(ellipse at bottom, rgba(93, 46, 70, 0.2), transparent 70%);
+    min-height: 100vh;
+    font-family: 'EB Garamond', serif;
+    color: var(--cream);
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+    overscroll-behavior: none;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(45deg, transparent 0, transparent 2px, rgba(245, 236, 217, 0.008) 2px, rgba(245, 236, 217, 0.008) 3px),
+      repeating-linear-gradient(-45deg, transparent 0, transparent 2px, rgba(0, 0, 0, 0.015) 2px, rgba(0, 0, 0, 0.015) 4px);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .stars-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .star-bg {
+    position: absolute;
+    color: var(--gold);
+    opacity: 0.4;
+    animation: twinkleBg 4s ease-in-out infinite;
+  }
+
+  @keyframes twinkleBg {
+    0%, 100% { opacity: 0.2; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.3); }
+  }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+  @keyframes sparkleFloat {
+    0%, 100% { opacity: 0; transform: translateY(0) scale(0.5); }
+    50% { opacity: 1; transform: translateY(-12px) scale(1); }
+  }
+  @keyframes mouthTalk {
+    0%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(0.4); }
+  }
+
+  .float { animation: float 4s ease-in-out infinite; }
+  .fade-in { animation: fadeIn 0.5s ease-out; }
+  .fade-in-scale { animation: fadeInScale 0.4s ease-out; }
+  .pulse-anim { animation: pulse 2s ease-in-out infinite; }
+
+  .font-serif { font-family: 'EB Garamond', serif; }
+  .font-display { font-family: 'Italiana', serif; }
+  .font-italic { font-family: 'Cormorant Garamond', serif; font-style: italic; }
+  .font-label { font-family: 'Cinzel', serif; letter-spacing: 4px; text-transform: uppercase; }
+
+  input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--gold-soft);
+    color: var(--cream);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 19px;
+    padding: 12px 14px;
+    width: 100%;
+    outline: none;
+    transition: all 0.3s;
+  }
+  input:focus, textarea:focus {
+    border-color: var(--gold-bright);
+    box-shadow: 0 0 12px rgba(201, 169, 97, 0.3);
+  }
+  input::placeholder, textarea::placeholder {
+    color: rgba(245, 236, 217, 0.4);
+    font-style: italic;
+  }
+
+  select {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--gold-soft);
+    color: var(--cream);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    padding: 10px 12px;
+    outline: none;
+    width: 100%;
+    transition: all 0.3s;
+  }
+  select:focus { border-color: var(--gold-bright); }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--indigo-deep); }
+  ::-webkit-scrollbar-thumb { background: var(--gold-soft); }
+
+  .sparkle {
+    position: absolute;
+    color: var(--gold-bright);
+    pointer-events: none;
+    animation: sparkleFloat 3s ease-in-out infinite;
+  }
+
+  .mouth-talking { animation: mouthTalk 0.35s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+
+  .tarot-card {
+    background: linear-gradient(180deg, var(--indigo) 0%, var(--indigo-deep) 100%);
+    border: 1px solid var(--gold);
+    padding: 6px;
+    position: relative;
+    box-shadow: 0 0 50px rgba(201, 169, 97, 0.15), inset 0 0 0 1px rgba(201, 169, 97, 0.2);
+    margin: 0 auto;
+    max-width: 540px;
+    width: 100%;
+  }
+
+  .tarot-card-inner {
+    border: 1px solid var(--gold-soft);
+    padding: 22px 18px;
+    position: relative;
+    min-height: 100%;
+  }
+
+  .corner-svg {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    fill: var(--gold);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+
+  .btn-mystic {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--gold-soft);
+    color: var(--cream);
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 18px;
+    letter-spacing: 3px;
+    padding: 14px 18px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    position: relative;
+  }
+
+  .btn-mystic:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-mystic::before, .btn-mystic::after {
+    content: '◆';
+    color: var(--gold);
+    font-size: 7px;
+    margin: 0 12px;
+    opacity: 0.6;
+    transition: opacity 0.3s;
+  }
+
+  .btn-mystic:not(:disabled):hover,
+  .btn-mystic:not(:disabled):active {
+    background: rgba(201, 169, 97, 0.1);
+    border-color: var(--gold-bright);
+    color: var(--gold-bright);
+    letter-spacing: 4px;
+  }
+
+  .btn-mystic.gold { border-color: var(--gold); color: var(--gold-bright); }
+  .btn-mystic.danger { border-color: var(--burgundy-light); color: var(--burgundy-light); }
+  .btn-mystic.danger:hover { background: rgba(139, 58, 98, 0.15); border-color: #b85a82; color: #d97aa3; }
+  .btn-mystic.small { font-size: 14px; padding: 10px 14px; letter-spacing: 2px; }
+
+  .page {
+    min-height: 100vh;
+    padding: 20px 16px 30px;
+    position: relative;
+    z-index: 10;
+  }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    margin: 14px auto;
+    width: 80%;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .divider-sym {
+    margin: 0 14px;
+    color: var(--gold);
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+<div class="stars-bg" id="starsBg"></div>
+<div id="root"></div>
+
+<script>
+  const starsBgEl = document.getElementById('starsBg');
+  for (let i = 0; i < 50; i++) {
+    const s = document.createElement('div');
+    s.className = 'star-bg';
+    s.textContent = Math.random() > 0.5 ? '✦' : '✧';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.top = Math.random() * 100 + '%';
+    s.style.fontSize = (Math.random() * 6 + 6) + 'px';
+    s.style.animationDelay = Math.random() * 4 + 's';
+    starsBgEl.appendChild(s);
+  }
+</script>
+
+<script type="text/babel" data-presets="env,react">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ============================================================
+// TRANSLATIONS
+// ============================================================
+const T = {
+  it: {
+    title: "Mana",
+    subtitle: "l'oracolo",
+    cardLabel: "L'Oracolo",
+    cardNumber: "XVIII",
+    modeClaude: "Mana indovina",
+    modeIsabel: "Isabel indovina",
+    settings: "Il Grimorio",
+    wins: "Vittorie",
+    losses: "Sconfitte",
+    winRate: "Successo",
+    settingsTitle: "Il Grimorio",
+    apiKey: "Chiave dell'Oracolo (API Key)",
+    apiKeyPh: "sk-ant-...",
+    apiKeyHelp: "La chiave è salvata solo sul tuo dispositivo",
+    maxQuestions: "Numero di Domande",
+    language: "Lingua",
+    resetStats: "Azzera Cronache",
+    save: "Salva",
+    back: "Indietro",
+    cancel: "Annulla",
+    confirm: "Conferma",
+    needApiKey: "Inserisci prima la chiave dell'oracolo nel Grimorio",
+    welcomeMsg: "Benvenuta Isabel... sono Mana, l'oracolo. A cosa giochiamo stasera?",
+    thinkChar: "Pensa a un Personaggio",
+    thinkCharSub: "reale o fantastico, umano, animale o creatura\\ndi un film, di un cartone o di un libro...",
+    manaWaitMsg: "Quando sarai pronta, dimmelo... e svelerò il tuo pensiero.",
+    ready: "Sono pronta",
+    yes: "Sì",
+    no: "No",
+    maybeYes: "Forse sì",
+    maybeNo: "Forse no",
+    dunno: "Non lo so",
+    question: "Domanda",
+    thinking: "Mana sta pensando",
+    consult: "consulto il cristallo",
+    guess: "Credo di sapere chi è...",
+    isItChar: "Il tuo personaggio è...",
+    youWin: "Hai vinto!",
+    youWinMana: "Le mie visioni mi hanno tradito... hai vinto tu.",
+    youLose: "Ti ho indovinata!",
+    youLoseMana: "Le mie visioni non mi hanno ingannata!",
+    iWin: "Hai indovinato!",
+    iWinMana: "Brava! Hai svelato il mio segreto!",
+    iLose: "Non hai indovinato!",
+    iLoseMana: "Le tue domande non bastano... il mio segreto resta tale.",
+    isabelMode: "Tocca a te indovinare",
+    claudeMode: "Tocca a me indovinare",
+    askQuestion: "Fai una domanda a Mana",
+    askPlaceholder: "Es: il personaggio è un animale?",
+    askBtn: "Chiedi",
+    iGuess: "Provo a indovinare",
+    yourGuess: "Il personaggio è...",
+    guessPlaceholder: "Scrivi qui il nome...",
+    submitGuess: "Indovina!",
+    newGame: "Nuova partita",
+    home: "Torna alla home",
+    revealedChar: "Il personaggio era",
+    confirmReset: "Vuoi davvero azzerare le cronache?",
+    confirmExit: "Vuoi davvero abbandonare la partita?",
+    yes2: "Sì",
+    no2: "No",
+    error: "Errore",
+    errorRetry: "Riprova",
+    apiError: "Errore con l'API. Controlla la chiave.",
+    networkError: "Problema di rete. Riprova.",
+    claudeChose: "Ho pensato a qualcuno...",
+    claudeChoseSub: "Ora fammi le tue domande per scoprirlo.",
+    yourAnswer: "Risposta",
+    invalidJson: "L'oracolo è confuso. Riprova.",
+    youSaid: "Hai risposto",
+  },
+  en: {
+    title: "Mana",
+    subtitle: "the oracle",
+    cardLabel: "The Oracle",
+    cardNumber: "XVIII",
+    modeClaude: "Mana guesses",
+    modeIsabel: "Isabel guesses",
+    settings: "The Grimoire",
+    wins: "Wins",
+    losses: "Losses",
+    winRate: "Success",
+    settingsTitle: "The Grimoire",
+    apiKey: "Oracle's Key (API Key)",
+    apiKeyPh: "sk-ant-...",
+    apiKeyHelp: "The key is saved only on your device",
+    maxQuestions: "Number of Questions",
+    language: "Language",
+    resetStats: "Reset Chronicles",
+    save: "Save",
+    back: "Back",
+    cancel: "Cancel",
+    confirm: "Confirm",
+    needApiKey: "Add the oracle's key in the Grimoire first",
+    welcomeMsg: "Welcome Isabel... I am Mana, the oracle. What shall we play tonight?",
+    thinkChar: "Think of a Character",
+    thinkCharSub: "real or fantastic, human, animal or creature\\nfrom a movie, cartoon or book...",
+    manaWaitMsg: "When you're ready, tell me... and I'll reveal your thought.",
+    ready: "I'm ready",
+    yes: "Yes",
+    no: "No",
+    maybeYes: "Maybe yes",
+    maybeNo: "Maybe no",
+    dunno: "Don't know",
+    question: "Question",
+    thinking: "Mana is thinking",
+    consult: "consulting the crystal",
+    guess: "I think I know who it is...",
+    isItChar: "Your character is...",
+    youWin: "You won!",
+    youWinMana: "My visions have failed me... you win.",
+    youLose: "I guessed it!",
+    youLoseMana: "My visions did not deceive me!",
+    iWin: "You guessed it!",
+    iWinMana: "Well done! You unveiled my secret!",
+    iLose: "You didn't guess!",
+    iLoseMana: "Your questions weren't enough... my secret remains.",
+    isabelMode: "Your turn to guess",
+    claudeMode: "My turn to guess",
+    askQuestion: "Ask Mana a question",
+    askPlaceholder: "E.g.: is the character an animal?",
+    askBtn: "Ask",
+    iGuess: "I'll guess",
+    yourGuess: "The character is...",
+    guessPlaceholder: "Write the name here...",
+    submitGuess: "Guess!",
+    newGame: "New game",
+    home: "Back to home",
+    revealedChar: "The character was",
+    confirmReset: "Really reset the chronicles?",
+    confirmExit: "Really abandon the game?",
+    yes2: "Yes",
+    no2: "No",
+    error: "Error",
+    errorRetry: "Retry",
+    apiError: "API error. Check your key.",
+    networkError: "Network issue. Try again.",
+    claudeChose: "I've thought of someone...",
+    claudeChoseSub: "Now ask me your questions to find out.",
+    yourAnswer: "Answer",
+    invalidJson: "The oracle is confused. Try again.",
+    youSaid: "You answered",
+  }
+};
+
+// ============================================================
+// STORAGE
+// ============================================================
+const STORAGE_KEY = 'mana_v1';
+const defaultState = {
+  apiKey: '',
+  language: 'it',
+  maxQuestions: 20,
+  stats: { wins: 0, losses: 0 },
+};
+const loadState = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { ...defaultState };
+    return { ...defaultState, ...JSON.parse(raw) };
+  } catch (e) { return { ...defaultState }; }
+};
+const saveState = (s) => {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (e) {}
+};
+
+// ============================================================
+// API CALL
+// ============================================================
+async function callClaude(apiKey, systemPrompt, messages) {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-opus-4-5',
+      max_tokens: 1024,
+      system: systemPrompt,
+      messages: messages,
+    }),
+  });
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error('API ' + response.status + ': ' + errText.slice(0, 300));
+  }
+  const data = await response.json();
+  return data.content.filter(c => c.type === 'text').map(c => c.text).join('\n');
+}
+
+function extractJSON(text) {
+  const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fenceMatch) {
+    try { return JSON.parse(fenceMatch[1].trim()); } catch (e) {}
+  }
+  const braceMatch = text.match(/\{[\s\S]*\}/);
+  if (braceMatch) {
+    try { return JSON.parse(braceMatch[0]); } catch (e) {}
+  }
+  try { return JSON.parse(text.trim()); } catch (e) {}
+  return null;
+}
+
+// ============================================================
+// CORNERS COMPONENT
+// ============================================================
+const Corners = () => {
+  const path = "M0,50 L0,0 L50,0 L50,2 L4,2 Q2,2 2,4 L2,50 Z M8,8 Q15,8 22,15 Q15,8 8,22 Z";
+  return (
+    <>
+      <svg className="corner-svg" style={{top: -1, left: -1}} viewBox="0 0 50 50"><path d={path}/></svg>
+      <svg className="corner-svg" style={{top: -1, right: -1, transform: 'scaleX(-1)'}} viewBox="0 0 50 50"><path d={path}/></svg>
+      <svg className="corner-svg" style={{bottom: -1, left: -1, transform: 'scaleY(-1)'}} viewBox="0 0 50 50"><path d={path}/></svg>
+      <svg className="corner-svg" style={{bottom: -1, right: -1, transform: 'scale(-1,-1)'}} viewBox="0 0 50 50"><path d={path}/></svg>
+    </>
+  );
+};
+
+// ============================================================
+// MANA CHARACTER (SVG)
+// ============================================================
+const Mana = ({ expression = 'welcome', talking = false, size = 'normal' }) => {
+  const svgRef = useRef(null);
+  const leftPupilRef = useRef(null);
+  const rightPupilRef = useRef(null);
+  const eyesRef = useRef(null);
+  const [pupilOffset, setPupilOffset] = useState({ x: 0, y: 0 });
+
+  // Pupil follows pointer
+  useEffect(() => {
+    const handleMove = (e) => {
+      if (!svgRef.current) return;
+      const rect = svgRef.current.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height * 0.36;
+      const dx = e.clientX - cx;
+      const dy = e.clientY - cy;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const angle = Math.atan2(dy, dx);
+      const max = 2.5;
+      const moveX = Math.cos(angle) * Math.min(dist / 200, 1) * max;
+      const moveY = Math.sin(angle) * Math.min(dist / 200, 1) * max;
+      setPupilOffset({ x: moveX, y: moveY });
+    };
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('touchmove', (e) => {
+      if (e.touches[0]) handleMove({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY });
+    }, { passive: true });
+    return () => {
+      document.removeEventListener('mousemove', handleMove);
+    };
+  }, []);
+
+  // Blinking
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!eyesRef.current || expression === 'sleepy') return;
+      if (Math.random() > 0.3) {
+        eyesRef.current.style.transition = 'transform 0.1s';
+        eyesRef.current.style.transformOrigin = '200px 180px';
+        eyesRef.current.style.transform = 'scaleY(0.05)';
+        setTimeout(() => { if (eyesRef.current) eyesRef.current.style.transform = 'scaleY(1)'; }, 130);
+      }
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [expression]);
+
+  // Expression mappings
+  const expressions = {
+    welcome: { mouth: 'M 192,218 Q 200,224 208,218', leftBrow: 'M 175,162 Q 183,158 192,162', rightBrow: 'M 208,162 Q 217,158 225,162' },
+    thinking: { mouth: 'M 194,220 Q 200,219 206,220', leftBrow: 'M 175,160 Q 183,156 192,162', rightBrow: 'M 208,162 Q 217,156 225,160' },
+    curious: { mouth: 'M 194,218 Q 200,221 206,218', leftBrow: 'M 175,158 Q 183,154 192,160', rightBrow: 'M 208,160 Q 217,154 225,158' },
+    surprised: { mouth: 'M 196,219 Q 200,228 204,219 Q 200,222 196,219', leftBrow: 'M 175,156 Q 183,150 192,156', rightBrow: 'M 208,156 Q 217,150 225,156' },
+    happy: { mouth: 'M 188,216 Q 200,232 212,216', leftBrow: 'M 175,160 Q 183,156 192,162', rightBrow: 'M 208,162 Q 217,156 225,160' },
+    sad: { mouth: 'M 188,224 Q 200,216 212,224', leftBrow: 'M 175,160 Q 183,164 192,158', rightBrow: 'M 208,158 Q 217,164 225,160' },
+    sleepy: { mouth: 'M 194,221 Q 200,222 206,221', leftBrow: 'M 175,164 Q 183,162 192,164', rightBrow: 'M 208,164 Q 217,162 225,164' },
+  };
+
+  const exp = expressions[expression] || expressions.welcome;
+  const sleepyTransform = expression === 'sleepy' ? 'scaleY(0.3)' : 'scaleY(1)';
+
+  const sizes = {
+    small: { w: 160, h: 200 },
+    normal: { w: 280, h: 350 },
+    big: { w: 360, h: 450 },
+  };
+  const s = sizes[size] || sizes.normal;
+
+  return (
+    <div style={{ position: 'relative', width: s.w + 'px', height: s.h + 'px', margin: '0 auto' }}>
+      <span className="sparkle" style={{ top: '15%', left: '8%', fontSize: '14px', animationDelay: '0s' }}>✦</span>
+      <span className="sparkle" style={{ top: '25%', right: '10%', fontSize: '10px', animationDelay: '1s' }}>✦</span>
+      <span className="sparkle" style={{ bottom: '40%', left: '5%', fontSize: '12px', animationDelay: '2s' }}>✧</span>
+      <span className="sparkle" style={{ bottom: '30%', right: '6%', fontSize: '14px', animationDelay: '0.5s' }}>✧</span>
+
+      <svg ref={svgRef} className="float" viewBox="0 0 400 500" style={{ width: '100%', height: '100%', display: 'block' }}>
+        <defs>
+          <radialGradient id="crystalGradM" cx="0.35" cy="0.35">
+            <stop offset="0%" stopColor="#e8f4ff"/>
+            <stop offset="40%" stopColor="#b8d4e8"/>
+            <stop offset="100%" stopColor="#5a7090"/>
+          </radialGradient>
+          <radialGradient id="crystalInnerM" cx="0.5" cy="0.5">
+            <stop offset="0%" stopColor="#e0c178" stopOpacity="0.8"/>
+            <stop offset="60%" stopColor="#c9a961" stopOpacity="0.4"/>
+            <stop offset="100%" stopColor="#c9a961" stopOpacity="0"/>
+          </radialGradient>
+          <linearGradient id="robeGradM" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#3a2d6e"/>
+            <stop offset="60%" stopColor="#2a1d4e"/>
+            <stop offset="100%" stopColor="#1a1030"/>
+          </linearGradient>
+          <linearGradient id="hoodGradM" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#4a2d7e"/>
+            <stop offset="100%" stopColor="#2a1d4e"/>
+          </linearGradient>
+          <radialGradient id="faceGradM" cx="0.5" cy="0.4">
+            <stop offset="0%" stopColor="#fae0c0"/>
+            <stop offset="100%" stopColor="#e8b890"/>
+          </radialGradient>
+          <linearGradient id="hairGradM" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#3a2050"/>
+            <stop offset="100%" stopColor="#1a1030"/>
+          </linearGradient>
+          <filter id="glowM" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="6" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <ellipse cx="200" cy="380" rx="160" ry="20" fill="#c9a961" opacity="0.15"/>
+        <circle cx="200" cy="250" r="170" fill="url(#crystalInnerM)" opacity="0.3"/>
+
+        <path d="M 110,290 Q 90,400 80,490 L 320,490 Q 310,400 290,290 Q 270,260 200,260 Q 130,260 110,290 Z" fill="url(#robeGradM)" stroke="#1a1030" strokeWidth="1"/>
+        <path d="M 200,290 L 200,490" stroke="#1a1030" strokeWidth="1.5" opacity="0.4"/>
+        <path d="M 150,310 Q 145,400 140,485" stroke="#1a1030" strokeWidth="1" opacity="0.3" fill="none"/>
+        <path d="M 250,310 Q 255,400 260,485" stroke="#1a1030" strokeWidth="1" opacity="0.3" fill="none"/>
+        <path d="M 80,485 Q 200,478 320,485" stroke="#c9a961" strokeWidth="2" fill="none" opacity="0.7"/>
+        <path d="M 80,490 Q 200,483 320,490" stroke="#b89a5e" strokeWidth="1" fill="none" opacity="0.5"/>
+
+        <path d="M 130,310 Q 105,350 130,395 Q 145,410 165,400 Q 175,395 180,385 L 175,360 Q 160,335 145,320 Z" fill="url(#robeGradM)" stroke="#1a1030" strokeWidth="1"/>
+        <path d="M 270,310 Q 295,350 270,395 Q 255,410 235,400 Q 225,395 220,385 L 225,360 Q 240,335 255,320 Z" fill="url(#robeGradM)" stroke="#1a1030" strokeWidth="1"/>
+
+        <ellipse cx="170" cy="395" rx="14" ry="11" fill="url(#faceGradM)" stroke="#c89870" strokeWidth="0.8"/>
+        <ellipse cx="230" cy="395" rx="14" ry="11" fill="url(#faceGradM)" stroke="#c89870" strokeWidth="0.8"/>
+
+        <g className="pulse-anim">
+          <circle cx="200" cy="395" r="55" fill="url(#crystalInnerM)" opacity="0.6" filter="url(#glowM)"/>
+          <circle cx="200" cy="395" r="42" fill="url(#crystalGradM)" stroke="#8a9aae" strokeWidth="1" opacity="0.9"/>
+          <circle cx="195" cy="390" r="32" fill="url(#crystalInnerM)" opacity="0.7"/>
+          <ellipse cx="185" cy="380" rx="14" ry="9" fill="#ffffff" opacity="0.5"/>
+          <ellipse cx="180" cy="375" rx="5" ry="3" fill="#ffffff" opacity="0.8"/>
+          <text x="195" y="400" fill="#e0c178" fontSize="10" opacity="0.8">✦</text>
+          <text x="208" y="392" fill="#e0c178" fontSize="7" opacity="0.6">✧</text>
+        </g>
+
+        <ellipse cx="200" cy="438" rx="22" ry="5" fill="#5d2e46" opacity="0.7"/>
+        <path d="M 180,435 Q 200,448 220,435" stroke="#c9a961" strokeWidth="1.5" fill="none"/>
+
+        <path d="M 145,180 Q 130,250 125,310 Q 130,320 145,315 Q 155,260 165,210 Z" fill="url(#hairGradM)" opacity="0.95"/>
+        <path d="M 255,180 Q 270,250 275,310 Q 270,320 255,315 Q 245,260 235,210 Z" fill="url(#hairGradM)" opacity="0.95"/>
+
+        <path d="M 180,235 L 220,235 L 215,270 L 185,270 Z" fill="url(#faceGradM)" stroke="#c89870" strokeWidth="0.8"/>
+
+        <path d="M 130,180 Q 120,140 145,110 Q 200,75 255,110 Q 280,140 270,180 Q 280,220 290,260 Q 280,275 260,275 L 260,220 Q 245,200 200,200 Q 155,200 140,220 L 140,275 Q 120,275 110,260 Q 120,220 130,180 Z" fill="url(#hoodGradM)" stroke="#1a1030" strokeWidth="1"/>
+
+        <path d="M 145,113 Q 200,80 255,113" stroke="#c9a961" strokeWidth="1.5" fill="none" opacity="0.8"/>
+        <path d="M 110,260 Q 120,225 135,200" stroke="#c9a961" strokeWidth="1" fill="none" opacity="0.6"/>
+        <path d="M 290,260 Q 280,225 265,200" stroke="#c9a961" strokeWidth="1" fill="none" opacity="0.6"/>
+
+        <ellipse cx="200" cy="180" rx="48" ry="58" fill="url(#faceGradM)" stroke="#c89870" strokeWidth="0.8"/>
+
+        <path d="M 160,140 Q 170,128 200,130 Q 230,128 240,140 Q 235,155 220,150 Q 200,145 180,150 Q 165,155 160,140 Z" fill="url(#hairGradM)"/>
+        <path d="M 155,150 Q 152,180 158,210" stroke="url(#hairGradM)" strokeWidth="6" fill="none" opacity="0.9"/>
+        <path d="M 245,150 Q 248,180 242,210" stroke="url(#hairGradM)" strokeWidth="6" fill="none" opacity="0.9"/>
+
+        <path d={exp.leftBrow} stroke="#2a1530" strokeWidth="2" fill="none" strokeLinecap="round"/>
+        <path d={exp.rightBrow} stroke="#2a1530" strokeWidth="2" fill="none" strokeLinecap="round"/>
+
+        <g ref={eyesRef} style={{ transform: sleepyTransform, transformOrigin: '200px 180px', transition: 'transform 0.3s' }}>
+          <g>
+            <ellipse cx="183" cy="180" rx="7" ry="5" fill="#ffffff"/>
+            <circle ref={leftPupilRef} cx={183 + pupilOffset.x} cy={180 + pupilOffset.y} r="3.5" fill="#2a1530"/>
+            <circle cx={184 + pupilOffset.x} cy={179 + pupilOffset.y} r="1.2" fill="#ffffff"/>
+          </g>
+          <g>
+            <ellipse cx="217" cy="180" rx="7" ry="5" fill="#ffffff"/>
+            <circle ref={rightPupilRef} cx={217 + pupilOffset.x} cy={180 + pupilOffset.y} r="3.5" fill="#2a1530"/>
+            <circle cx={218 + pupilOffset.x} cy={179 + pupilOffset.y} r="1.2" fill="#ffffff"/>
+          </g>
+          <path d="M 176,177 L 174,175 M 183,175 L 183,173 M 190,177 L 192,175" stroke="#2a1530" strokeWidth="1" strokeLinecap="round"/>
+          <path d="M 210,177 L 208,175 M 217,175 L 217,173 M 224,177 L 226,175" stroke="#2a1530" strokeWidth="1" strokeLinecap="round"/>
+        </g>
+
+        <ellipse cx="170" cy="200" rx="9" ry="5" fill="#e89090" opacity="0.4"/>
+        <ellipse cx="230" cy="200" rx="9" ry="5" fill="#e89090" opacity="0.4"/>
+
+        <path d="M 198,192 Q 200,205 202,192" stroke="#c89870" strokeWidth="1" fill="none" strokeLinecap="round"/>
+
+        <path d={exp.mouth} stroke="#8b3a62" strokeWidth="2" fill="none" strokeLinecap="round"
+          className={talking ? 'mouth-talking' : ''} />
+
+        <circle cx="200" cy="135" r="3" fill="#c9a961"/>
+        <circle cx="200" cy="135" r="1.5" fill="#e0c178"/>
+
+        <path d="M 152,135 Q 200,108 248,135" stroke="#4a2d7e" strokeWidth="2" fill="none" opacity="0.6"/>
+      </svg>
+    </div>
+  );
+};
+
+// ============================================================
+// SPEECH BUBBLE
+// ============================================================
+const SpeechBubble = ({ text, talking = false }) => (
+  <div className="fade-in" style={{
+    margin: '16px auto 0',
+    maxWidth: '460px',
+    padding: '16px 22px',
+    background: 'rgba(245, 236, 217, 0.05)',
+    border: '1px solid var(--gold-soft)',
+    position: 'relative',
+    minHeight: '70px',
+  }}>
+    <span style={{ position: 'absolute', top: -1, left: -1, width: '14px', height: '14px', borderTop: '1px solid var(--gold)', borderLeft: '1px solid var(--gold)' }}></span>
+    <span style={{ position: 'absolute', bottom: -1, right: -1, width: '14px', height: '14px', borderBottom: '1px solid var(--gold)', borderRight: '1px solid var(--gold)' }}></span>
+    <div className="font-label" style={{ fontSize: '9px', color: 'var(--gold)', textAlign: 'center', marginBottom: '8px' }}>
+      ✦ Mana ✦
+    </div>
+    <div className="font-italic" style={{ fontSize: '20px', color: 'var(--cream)', textAlign: 'center', lineHeight: 1.4 }}>
+      {text}
+    </div>
+  </div>
+);
+
+// ============================================================
+// MODAL
+// ============================================================
+const Modal = ({ children, onClose }) => (
+  <div onClick={onClose} className="fade-in" style={{
+    position: 'fixed', inset: 0,
+    background: 'rgba(10, 14, 41, 0.92)',
+    backdropFilter: 'blur(4px)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    zIndex: 500, padding: '20px',
+  }}>
+    <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: '500px' }}>
+      {children}
+    </div>
+  </div>
+);
+
+// ============================================================
+// HOME
+// ============================================================
+const Home = ({ state, setState, onStart }) => {
+  const t = T[state.language];
+  const [showSettings, setShowSettings] = useState(false);
+  const [showError, setShowError] = useState(null);
+  const totalGames = state.stats.wins + state.stats.losses;
+  const winRate = totalGames > 0 ? Math.round((state.stats.wins / totalGames) * 100) : 0;
+
+  const tryStart = (mode) => {
+    if (!state.apiKey || !state.apiKey.trim()) {
+      setShowError(t.needApiKey);
+      return;
+    }
+    onStart(mode);
+  };
+
+  const toRoman = (n) => {
+    const romans = [['M',1000],['CM',900],['D',500],['CD',400],['C',100],['XC',90],['L',50],['XL',40],['X',10],['IX',9],['V',5],['IV',4],['I',1]];
+    let r = ''; let num = n;
+    for (const [s, v] of romans) {
+      while (num >= v) { r += s; num -= v; }
+    }
+    return r || 'O';
+  };
+
+  return (
+    <div className="page">
+      <div className="tarot-card fade-in">
+        <div className="tarot-card-inner">
+          <Corners />
+
+          {/* Lang selector */}
+          <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '4px', zIndex: 20 }}>
+            {['it', 'en'].map(lang => (
+              <span key={lang}
+                onClick={() => { const ns = { ...state, language: lang }; setState(ns); saveState(ns); }}
+                className="font-label"
+                style={{
+                  cursor: 'pointer', padding: '3px 8px', border: '1px solid var(--gold-soft)',
+                  fontSize: '9px', letterSpacing: '2px',
+                  background: state.language === lang ? 'var(--gold)' : 'transparent',
+                  color: state.language === lang ? 'var(--ink)' : 'var(--gold)',
+                }}>{lang.toUpperCase()}</span>
+            ))}
+          </div>
+
+          <div style={{ textAlign: 'center', marginTop: '24px' }}>
+            <div className="font-label" style={{ fontSize: '10px', color: 'var(--gold)', letterSpacing: '8px', marginBottom: '2px' }}>
+              {t.cardLabel}
+            </div>
+            <div className="font-display" style={{ fontSize: '26px', color: 'var(--gold-bright)', marginBottom: '10px' }}>
+              {t.cardNumber}
+            </div>
+          </div>
+
+          {/* Mana big */}
+          <Mana expression="welcome" size="normal" />
+
+          <div style={{ textAlign: 'center', marginTop: '14px' }}>
+            <div className="font-display" style={{ fontSize: '52px', color: 'var(--silver)', letterSpacing: '6px', lineHeight: 1, textShadow: '0 2px 20px rgba(232, 228, 208, 0.3)' }}>
+              {t.title}
+            </div>
+            <div className="font-italic" style={{ fontSize: '18px', color: 'var(--gold-bright)', letterSpacing: '2px', marginTop: '2px' }}>
+              {t.subtitle}
+            </div>
+          </div>
+
+          <SpeechBubble text={t.welcomeMsg} />
+
+          <div className="divider"><span className="divider-sym">✦</span></div>
+
+          <div style={{ marginTop: '14px' }}>
+            <button className="btn-mystic" onClick={() => tryStart('claude')}>{t.modeClaude}</button>
+            <button className="btn-mystic" onClick={() => tryStart('isabel')}>{t.modeIsabel}</button>
+            <button className="btn-mystic gold" onClick={() => setShowSettings(true)}>{t.settings}</button>
+          </div>
+
+          {/* Stats */}
+          <div style={{
+            display: 'flex', justifyContent: 'space-around',
+            marginTop: '30px', paddingTop: '22px',
+            borderTop: '1px solid rgba(201, 169, 97, 0.3)',
+            position: 'relative',
+          }}>
+            <span style={{ position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)', background: 'var(--indigo)', padding: '0 10px', color: 'var(--gold)', fontSize: '12px' }}>✦</span>
+            <div style={{ textAlign: 'center' }}>
+              <div className="font-display" style={{ fontSize: '34px', color: 'var(--gold-bright)', lineHeight: 1, textShadow: '0 0 15px rgba(224, 193, 120, 0.3)' }}>
+                {toRoman(state.stats.wins)}
+              </div>
+              <div className="font-label" style={{ fontSize: '8px', color: 'var(--gold)', marginTop: '8px' }}>{t.wins}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div className="font-display" style={{ fontSize: '34px', color: 'var(--gold-bright)', lineHeight: 1, textShadow: '0 0 15px rgba(224, 193, 120, 0.3)' }}>
+                {toRoman(state.stats.losses)}
+              </div>
+              <div className="font-label" style={{ fontSize: '8px', color: 'var(--gold)', marginTop: '8px' }}>{t.losses}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div className="font-display" style={{ fontSize: '34px', color: 'var(--gold-bright)', lineHeight: 1, textShadow: '0 0 15px rgba(224, 193, 120, 0.3)' }}>
+                {winRate}%
+              </div>
+              <div className="font-label" style={{ fontSize: '8px', color: 'var(--gold)', marginTop: '8px' }}>{t.winRate}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {showSettings && (
+        <Modal onClose={() => setShowSettings(false)}>
+          <Settings state={state} setState={setState} onClose={() => setShowSettings(false)} />
+        </Modal>
+      )}
+
+      {showError && (
+        <Modal onClose={() => setShowError(null)}>
+          <div className="tarot-card">
+            <div className="tarot-card-inner">
+              <Corners />
+              <div className="font-display" style={{ fontSize: '28px', color: 'var(--error)', textAlign: 'center', marginBottom: '16px' }}>
+                {t.error}
+              </div>
+              <div className="font-italic" style={{ fontSize: '20px', textAlign: 'center', color: 'var(--cream)', marginBottom: '20px' }}>
+                {showError}
+              </div>
+              <button className="btn-mystic gold" onClick={() => { setShowError(null); setShowSettings(true); }}>
+                {t.settings}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+};
+
+// ============================================================
+// SETTINGS
+// ============================================================
+const Settings = ({ state, setState, onClose }) => {
+  const t = T[state.language];
+  const [apiKey, setApiKey] = useState(state.apiKey);
+  const [maxQ, setMaxQ] = useState(state.maxQuestions);
+  const [lang, setLang] = useState(state.language);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  const save = () => {
+    const ns = { ...state, apiKey: apiKey.trim(), maxQuestions: Math.max(5, Math.min(50, parseInt(maxQ) || 20)), language: lang };
+    setState(ns);
+    saveState(ns);
+    onClose();
+  };
+
+  const resetStats = () => {
+    const ns = { ...state, stats: { wins: 0, losses: 0 } };
+    setState(ns);
+    saveState(ns);
+    setShowResetConfirm(false);
+  };
+
+  return (
+    <div className="tarot-card">
+      <div className="tarot-card-inner">
+        <Corners />
+        <div className="font-display" style={{ fontSize: '32px', color: 'var(--gold-bright)', textAlign: 'center', marginBottom: '20px', letterSpacing: '4px' }}>
+          {t.settingsTitle}
+        </div>
+        <div className="divider"><span className="divider-sym">✦</span></div>
+
+        <div style={{ marginTop: '20px' }}>
+          <label className="font-label" style={{ fontSize: '9px', color: 'var(--gold)', display: 'block', marginBottom: '8px' }}>
+            {t.apiKey}
+          </label>
+          <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder={t.apiKeyPh} />
+          <div className="font-italic" style={{ fontSize: '15px', color: 'rgba(245,236,217,0.6)', marginTop: '6px' }}>
+            {t.apiKeyHelp}
+          </div>
+        </div>
+
+        <div style={{ marginTop: '20px' }}>
+          <label className="font-label" style={{ fontSize: '9px', color: 'var(--gold)', display: 'block', marginBottom: '8px' }}>
+            {t.maxQuestions}
+          </label>
+          <input type="number" min="5" max="50" value={maxQ} onChange={e => setMaxQ(e.target.value)} />
+        </div>
+
+        <div style={{ marginTop: '20px' }}>
+          <label className="font-label" style={{ fontSize: '9px', color: 'var(--gold)', display: 'block', marginBottom: '8px' }}>
+            {t.language}
+          </label>
+          <select value={lang} onChange={e => setLang(e.target.value)}>
+            <option value="it">Italiano</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+
+        <div style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <button className="btn-mystic small" onClick={onClose}>{t.cancel}</button>
+          <button className="btn-mystic gold small" onClick={save}>{t.save}</button>
+        </div>
+
+        <div style={{ marginTop: '12px' }}>
+          <button className="btn-mystic danger small" onClick={() => setShowResetConfirm(true)}>
+            {t.resetStats}
+          </button>
+        </div>
+
+        {showResetConfirm && (
+          <Modal onClose={() => setShowResetConfirm(false)}>
+            <div className="tarot-card">
+              <div className="tarot-card-inner">
+                <Corners />
+                <div className="font-display" style={{ fontSize: '24px', color: 'var(--error)', textAlign: 'center', marginBottom: '20px' }}>
+                  {t.confirmReset}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <button className="btn-mystic small" onClick={() => setShowResetConfirm(false)}>{t.no2}</button>
+                  <button className="btn-mystic danger small" onClick={resetStats}>{t.yes2}</button>
+                </div>
+              </div>
+            </div>
+          </Modal>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ============================================================
+// MODE 1: CLAUDE/MANA GUESSES
+// ============================================================
+const ClaudeGuessesMode = ({ state, setState, onExit }) => {
+  const t = T[state.language];
+  const [phase, setPhase] = useState('intro');
+  const [history, setHistory] = useState([]);
+  const [currentQuestion, setCurrentQuestion] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [endResult, setEndResult] = useState(null);
+  const [confirmExit, setConfirmExit] = useState(false);
+  const fetchInProgressRef = useRef(false);
+
+  const questionCount = history.length;
+  const maxQ = state.maxQuestions;
+
+  const buildSystemPrompt = () => {
+    const langName = state.language === 'it' ? 'Italian' : 'English';
+    return `You are Mana, a young apprentice oracle/witch character, playing a "Guess Who" / "Akinator" style game with a child named Isabel (8-10 years old).
+
+GAME RULES:
+- Isabel has thought of a character (real or fictional, human/animal/creature, from movies, cartoons, videogames, books, history, etc.)
+- You must guess the character by asking yes/no style questions
+- Isabel answers with one of: "yes", "no", "maybe yes", "maybe no", "don't know"
+- You have a maximum of ${maxQ} questions total to guess
+- A guess attempt counts as one of your questions
+- If you run out without guessing correctly, Isabel wins
+- The conversation must be in ${langName}
+
+YOUR PERSONALITY (Mana):
+- Mystical, gentle, slightly playful young oracle
+- Speaks like she's reading visions in a crystal ball
+- Encouraging and friendly with Isabel
+- Uses poetic phrasing occasionally ("Vedo...", "Le mie visioni mi dicono...", etc.) but keeps questions clear
+
+STRATEGY:
+- Start with broad categorizing questions (real/fictional? human/animal? from movies/cartoons/videogames?)
+- Progressively narrow down based on previous answers
+- Pay attention to "maybe" and "don't know" - they often hint at the answer
+- Don't guess too early (waste of questions) or too late
+- Consider age-appropriate characters for an 8-10 year old (Disney/Pixar, Pokemon, Mario, Harry Potter, common animals, famous figures kids know, popular cartoons, etc.)
+
+OUTPUT FORMAT (MANDATORY):
+Respond with a SINGLE JSON object only (no markdown fences, no extra text):
+{
+  "action": "question" | "guess",
+  "text": "the question or character name in ${langName}",
+  "manaLine": "a short in-character phrase from Mana introducing the question/guess in ${langName}, max 12 words",
+  "expression": "thinking" | "curious" | "happy"
+}
+
+If action is "question", "text" is the next yes/no question.
+If action is "guess", "text" is the specific character name (e.g. "Pikachu", "Mickey Mouse").
+
+Examples in Italian:
+{"action": "question", "text": "Il tuo personaggio è un animale?", "manaLine": "Vedo qualcosa nelle mie visioni...", "expression": "curious"}
+{"action": "guess", "text": "Pikachu", "manaLine": "Il cristallo me lo rivela...", "expression": "happy"}`;
+  };
+
+  const buildMessages = () => {
+    const lines = history.map((h, i) => {
+      if (h.type === 'question') return `Q${i+1}: ${h.text}\nIsabel: ${h.answer}`;
+      return `Q${i+1} (guess): "${h.text}"\nIsabel: ${h.answer}`;
+    });
+    const summary = lines.length === 0
+      ? `Game starting. You have ${maxQ} questions. Make your first move.`
+      : `Game in progress. ${questionCount}/${maxQ} questions used. ${maxQ - questionCount} remaining.\n\nHistory:\n${lines.join('\n\n')}\n\nWhat's your next move?`;
+    return [{ role: 'user', content: summary }];
+  };
+
+  const askMana = async () => {
+    if (fetchInProgressRef.current) return;
+    fetchInProgressRef.current = true;
+    setLoading(true);
+    setError(null);
+    try {
+      const sys = buildSystemPrompt();
+      const msgs = buildMessages();
+      const response = await callClaude(state.apiKey, sys, msgs);
+      const parsed = extractJSON(response);
+      if (!parsed || !parsed.action || !parsed.text) {
+        throw new Error('Risposta non valida: ' + response.slice(0, 150));
+      }
+      setCurrentQuestion({
+        text: parsed.text,
+        isGuess: parsed.action === 'guess',
+        manaLine: parsed.manaLine || '',
+        expression: parsed.expression || 'curious',
+      });
+      setLoading(false);
+    } catch (e) {
+      setError(e.message);
+      setLoading(false);
+    }
+    fetchInProgressRef.current = false;
+  };
+
+  useEffect(() => {
+    if (phase === 'playing' && !currentQuestion && !loading && !error && history.length < maxQ) {
+      askMana();
+    }
+  }, [phase, currentQuestion, history.length]);
+
+  const handleAnswer = (answer) => {
+    if (!currentQuestion) return;
+
+    if (currentQuestion.isGuess) {
+      const newHistory = [...history, { type: 'guess', text: currentQuestion.text, answer }];
+      setHistory(newHistory);
+      const yesAnswers = state.language === 'it' ? ['sì', 'forse sì'] : ['yes', 'maybe yes'];
+      if (yesAnswers.includes(answer)) {
+        const ns = { ...state, stats: { ...state.stats, losses: state.stats.losses + 1 } };
+        setState(ns); saveState(ns);
+        setEndResult('claude_won');
+        setPhase('end');
+        return;
+      }
+      if (newHistory.length >= maxQ) {
+        const ns = { ...state, stats: { ...state.stats, wins: state.stats.wins + 1 } };
+        setState(ns); saveState(ns);
+        setEndResult('isabel_won');
+        setPhase('end');
+        return;
+      }
+      setCurrentQuestion(null);
+      return;
+    }
+
+    const newHistory = [...history, { type: 'question', text: currentQuestion.text, answer }];
+    setHistory(newHistory);
+    if (newHistory.length >= maxQ) {
+      const ns = { ...state, stats: { ...state.stats, wins: state.stats.wins + 1 } };
+      setState(ns); saveState(ns);
+      setEndResult('isabel_won');
+      setPhase('end');
+      return;
+    }
+    setCurrentQuestion(null);
+  };
+
+  const answerLabels = {
+    yes: state.language === 'it' ? 'sì' : 'yes',
+    no: state.language === 'it' ? 'no' : 'no',
+    maybeYes: state.language === 'it' ? 'forse sì' : 'maybe yes',
+    maybeNo: state.language === 'it' ? 'forse no' : 'maybe no',
+    dunno: state.language === 'it' ? 'non lo so' : "don't know",
+  };
+
+  // INTRO PHASE
+  if (phase === 'intro') {
+    return (
+      <div className="page">
+        <div className="tarot-card fade-in">
+          <div className="tarot-card-inner">
+            <Corners />
+            <div className="font-label" style={{ fontSize: '10px', color: 'var(--gold)', textAlign: 'center', marginBottom: '10px' }}>
+              {t.claudeMode}
+            </div>
+            <Mana expression="curious" size="normal" />
+            <div className="font-display" style={{ fontSize: '28px', color: 'var(--silver)', textAlign: 'center', marginTop: '20px', letterSpacing: '3px' }}>
+              {t.thinkChar}
+            </div>
+            <div className="font-italic" style={{ fontSize: '18px', color: 'var(--gold-bright)', textAlign: 'center', marginTop: '10px', whiteSpace: 'pre-line', lineHeight: 1.4 }}>
+              {t.thinkCharSub}
+            </div>
+            <SpeechBubble text={t.manaWaitMsg} />
+            <div style={{ marginTop: '28px' }}>
+              <button className="btn-mystic gold" onClick={() => setPhase('playing')}>{t.ready}</button>
+              <button className="btn-mystic small" onClick={onExit}>{t.back}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // END PHASE
+  if (phase === 'end') {
+    const isWin = endResult === 'isabel_won';
+    const message = isWin ? t.youWin : t.youLose;
+    const manaMsg = isWin ? t.youWinMana : t.youLoseMana;
+    const manaExp = isWin ? 'sad' : 'happy';
+    return (
+      <div className="page">
+        <div className="tarot-card fade-in-scale">
+          <div className="tarot-card-inner">
+            <Corners />
+            <Mana expression={manaExp} size="normal" />
+            <div className="font-display" style={{ fontSize: 'clamp(36px, 9vw, 48px)', color: 'var(--gold-bright)', textAlign: 'center', marginTop: '20px', letterSpacing: '4px', textShadow: '0 0 20px rgba(224, 193, 120, 0.5)' }}>
+              {message}
+            </div>
+            <SpeechBubble text={manaMsg} />
+            <div className="divider"><span className="divider-sym">✦</span></div>
+            <div className="font-italic" style={{ fontSize: '18px', textAlign: 'center', color: 'var(--cream)', margin: '14px 0' }}>
+              {state.language === 'it' ? `Domande usate: ${history.length}/${maxQ}` : `Questions used: ${history.length}/${maxQ}`}
+            </div>
+            <div style={{ marginTop: '20px' }}>
+              <button className="btn-mystic gold" onClick={() => {
+                setHistory([]); setCurrentQuestion(null); setEndResult(null); setPhase('intro'); setError(null);
+              }}>{t.newGame}</button>
+              <button className="btn-mystic" onClick={onExit}>{t.home}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // PLAYING PHASE
+  const progress = (questionCount / maxQ) * 100;
+  const manaExpression = loading ? 'thinking' : (currentQuestion?.expression || 'curious');
+
+  return (
+    <div className="page">
+      <div className="tarot-card fade-in">
+        <div className="tarot-card-inner">
+          <Corners />
+
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingBottom: '14px', borderBottom: '1px solid rgba(201, 169, 97, 0.3)', marginBottom: '16px' }}>
+            <div className="font-display" style={{ fontSize: '20px', color: 'var(--gold-bright)', whiteSpace: 'nowrap', letterSpacing: '2px' }}>
+              {questionCount + (currentQuestion || loading ? 1 : 0)} / {maxQ}
+            </div>
+            <div style={{ flex: 1, height: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--gold-soft)', position: 'relative' }}>
+              <div style={{ height: '100%', width: progress + '%', background: 'linear-gradient(90deg, var(--gold-soft), var(--gold-bright))', boxShadow: '0 0 8px var(--gold)', transition: 'width 0.4s' }}></div>
+            </div>
+            <div onClick={() => setConfirmExit(true)} className="font-label" style={{ fontSize: '11px', color: 'var(--burgundy-light)', cursor: 'pointer', border: '1px solid var(--burgundy-light)', padding: '3px 9px', letterSpacing: '2px' }}>
+              ✕
+            </div>
+          </div>
+
+          <Mana expression={manaExpression} size="small" talking={!loading && !!currentQuestion} />
+
+          {/* Loading */}
+          {loading && (
+            <div style={{ padding: '20px 0', textAlign: 'center' }}>
+              <div className="font-italic pulse-anim" style={{ fontSize: '20px', color: 'var(--gold-bright)', letterSpacing: '2px' }}>
+                {t.thinking}<span className="pulse-anim">...</span>
+              </div>
+              <div className="font-italic" style={{ fontSize: '15px', color: 'rgba(245,236,217,0.6)', marginTop: '6px' }}>
+                {t.consult}
+              </div>
+            </div>
+          )}
+
+          {/* Error */}
+          {error && !loading && (
+            <div style={{ padding: '14px 0', textAlign: 'center' }}>
+              <div className="font-display" style={{ fontSize: '22px', color: 'var(--error)', marginBottom: '12px' }}>{t.error}</div>
+              <div className="font-italic" style={{ fontSize: '15px', color: 'var(--cream)', marginBottom: '16px', wordBreak: 'break-word', padding: '0 10px' }}>
+                {error.length > 200 ? error.slice(0, 200) + '...' : error}
+              </div>
+              <button className="btn-mystic gold small" onClick={() => { setError(null); askMana(); }}>{t.errorRetry}</button>
+              <button className="btn-mystic small" onClick={onExit}>{t.home}</button>
+            </div>
+          )}
+
+          {/* Question */}
+          {currentQuestion && !loading && !error && (
+            <div className="fade-in">
+              {currentQuestion.manaLine && (
+                <div className="font-italic" style={{ fontSize: '16px', color: 'var(--gold-bright)', textAlign: 'center', margin: '6px 0 12px', letterSpacing: '1px' }}>
+                  ~ {currentQuestion.manaLine} ~
+                </div>
+              )}
+              <div style={{
+                margin: '12px 0 20px',
+                padding: '20px 16px',
+                position: 'relative',
+                background: 'rgba(0, 0, 0, 0.2)',
+                border: '1px solid rgba(201, 169, 97, 0.4)',
+              }}>
+                <span style={{ position: 'absolute', top: -1, left: -1, width: '20px', height: '20px', borderTop: '1px solid var(--gold)', borderLeft: '1px solid var(--gold)' }}></span>
+                <span style={{ position: 'absolute', bottom: -1, right: -1, width: '20px', height: '20px', borderBottom: '1px solid var(--gold)', borderRight: '1px solid var(--gold)' }}></span>
+
+                <div className="font-label" style={{ fontSize: '9px', color: 'var(--gold)', textAlign: 'center', marginBottom: '10px' }}>
+                  {currentQuestion.isGuess ? '✦ ' + t.guess + ' ✦' : t.question + ' ' + (questionCount + 1)}
+                </div>
+                <div className="font-italic" style={{ fontSize: 'clamp(20px, 5vw, 26px)', color: 'var(--cream)', textAlign: 'center', lineHeight: 1.4, fontWeight: 500 }}>
+                  {currentQuestion.isGuess ? t.isItChar : currentQuestion.text}
+                </div>
+                {currentQuestion.isGuess && (
+                  <div className="font-display" style={{ fontSize: '28px', color: 'var(--gold-bright)', textAlign: 'center', marginTop: '12px', letterSpacing: '3px', textShadow: '0 0 15px rgba(224, 193, 120, 0.4)' }}>
+                    ✦ {currentQuestion.text} ✦
+                  </div>
+                )}
+              </div>
+
+              {/* Answers */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <AnswerBtn symbol="☉" label={t.yes} onClick={() => handleAnswer(answerLabels.yes)} color="var(--gold-bright)" />
+                <AnswerBtn symbol="☾" label={t.no} onClick={() => handleAnswer(answerLabels.no)} color="var(--burgundy-light)" />
+                <AnswerBtn symbol="◐" label={t.maybeYes} onClick={() => handleAnswer(answerLabels.maybeYes)} color="var(--gold-soft)" />
+                <AnswerBtn symbol="◑" label={t.maybeNo} onClick={() => handleAnswer(answerLabels.maybeNo)} color="var(--burgundy)" />
+                <div style={{ gridColumn: 'span 2' }}>
+                  <AnswerBtn symbol="✦" label={t.dunno} onClick={() => handleAnswer(answerLabels.dunno)} color="var(--silver)" />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {confirmExit && (
+        <Modal onClose={() => setConfirmExit(false)}>
+          <div className="tarot-card">
+            <div className="tarot-card-inner">
+              <Corners />
+              <div className="font-display" style={{ fontSize: '24px', color: 'var(--error)', textAlign: 'center', marginBottom: '20px' }}>
+                {t.confirmExit}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <button className="btn-mystic small" onClick={() => setConfirmExit(false)}>{t.no2}</button>
+                <button className="btn-mystic danger small" onClick={onExit}>{t.yes2}</button>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+};
+
+const AnswerBtn = ({ symbol, label, onClick, color }) => {
+  const [hover, setHover] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        width: '100%',
+        background: hover ? 'rgba(201, 169, 97, 0.08)' : 'transparent',
+        border: '1px solid var(--gold-soft)',
+        borderColor: hover ? 'var(--gold-bright)' : 'var(--gold-soft)',
+        color: 'var(--cream)',
+        fontFamily: "'Cormorant Garamond', serif",
+        fontSize: '17px',
+        padding: '14px 10px',
+        cursor: 'pointer',
+        transition: 'all 0.3s',
+        letterSpacing: '2px',
+        textAlign: 'center',
+        transform: hover ? 'translateY(-2px)' : 'none',
+        boxShadow: hover ? '0 4px 20px rgba(201, 169, 97, 0.2)' : 'none',
+      }}
+    >
+      <div style={{ fontFamily: "'Italiana', serif", fontSize: '26px', color: color, lineHeight: 1, marginBottom: '4px' }}>
+        {symbol}
+      </div>
+      {label}
+    </button>
+  );
+};
+
+// ============================================================
+// MODE 2: ISABEL GUESSES
+// ============================================================
+const IsabelGuessesMode = ({ state, setState, onExit }) => {
+  const t = T[state.language];
+  const [phase, setPhase] = useState('init');
+  const [history, setHistory] = useState([]);
+  const [currentInput, setCurrentInput] = useState('');
+  const [lastResponse, setLastResponse] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [endResult, setEndResult] = useState(null);
+  const [confirmExit, setConfirmExit] = useState(false);
+  const [showGuessInput, setShowGuessInput] = useState(false);
+  const [guessText, setGuessText] = useState('');
+  const [revealedChar, setRevealedChar] = useState(null);
+  const initInProgressRef = useRef(false);
+
+  const questionCount = history.filter(h => h.role === 'user').length;
+  const maxQ = state.maxQuestions;
+
+  const buildSystemPrompt = () => {
+    const langName = state.language === 'it' ? 'Italian' : 'English';
+    return `You are Mana, a young apprentice oracle/witch character, playing a "Guess Who" / "Akinator" style game with a child named Isabel (8-10 years old). She is trying to guess a character that YOU have chosen.
+
+GAME RULES:
+- You pick a character (real or fictional, human/animal/creature, from movies, cartoons, videogames, books, history, etc.)
+- The character must be famous and recognizable for an 8-10 year old (Disney/Pixar characters, Pokemon, Mario, Harry Potter, common animals, famous figures kids know, popular cartoons, etc.)
+- CRITICAL: Once chosen, you MUST remember the character consistently across all responses
+- Isabel asks yes/no questions about the character
+- You answer ONLY with one of: "yes", "no", "maybe yes", "maybe no", "don't know" (translated to ${langName})
+- Isabel may try to guess the name - respond truthfully whether she got it
+- Conversation in ${langName}
+
+YOUR PERSONALITY (Mana):
+- Mystical, gentle, slightly playful young oracle
+- Speaks like she's keeping a beautiful secret
+- Encouraging with Isabel
+- Brief poetic touches occasionally
+
+PICK A VARIED CHARACTER: don't always pick the same ones. Mix between Disney princesses, Pixar characters, Pokemon, Nintendo characters, classic Disney, popular animals, historical figures, fairy tale characters, etc.
+
+OUTPUT FORMAT (MANDATORY):
+Respond with a SINGLE JSON object only (no markdown fences, no extra text).
+
+For the FIRST message (picking the character):
+{
+  "action": "start",
+  "character": "exact name of the character",
+  "manaLine": "in-character phrase from Mana, max 15 words, in ${langName}",
+  "expression": "happy" | "curious"
+}
+
+For answers to yes/no questions:
+{
+  "action": "answer",
+  "character": "same character name as before (IMPORTANT: identical)",
+  "answer": "yes" | "no" | "maybe yes" | "maybe no" | "don't know" (in ${langName}),
+  "manaLine": "optional short reaction, max 10 words in ${langName}",
+  "expression": "curious" | "happy" | "surprised" | "thinking"
+}
+
+When Isabel tries to guess a name:
+{
+  "action": "answer",
+  "character": "same character name as before",
+  "isGuess": true,
+  "correct": true | false,
+  "manaLine": "in-character reaction in ${langName}, max 12 words",
+  "expression": "sad" if correct (she won), "happy" if wrong
+}
+
+CRITICAL:
+- "character" field MUST be identical across all responses in this game
+- Tolerate small spelling variations in Isabel's guesses (Pikachu/pikatchu/Pikatcù all match Pikachu)
+- Be truthful with guesses`;
+  };
+
+  const initGame = async () => {
+    if (initInProgressRef.current) return;
+    initInProgressRef.current = true;
+    setLoading(true);
+    setError(null);
+    try {
+      const sys = buildSystemPrompt();
+      const initMsg = state.language === 'it'
+        ? "Iniziamo! Scegli un personaggio segreto."
+        : "Let's start! Pick a secret character.";
+      const response = await callClaude(state.apiKey, sys, [{ role: 'user', content: initMsg }]);
+      const parsed = extractJSON(response);
+      if (!parsed || parsed.action !== 'start' || !parsed.character) {
+        throw new Error('Risposta non valida: ' + response.slice(0, 150));
+      }
+      setHistory([
+        { role: 'user', content: initMsg },
+        { role: 'assistant', content: response },
+      ]);
+      setLastResponse({
+        type: 'intro',
+        manaLine: parsed.manaLine || t.claudeChose,
+        expression: parsed.expression || 'happy',
+      });
+      setPhase('playing');
+      setLoading(false);
+    } catch (e) {
+      setError(e.message);
+      setLoading(false);
+    }
+    initInProgressRef.current = false;
+  };
+
+  useEffect(() => {
+    if (phase === 'init' && !initInProgressRef.current) {
+      initGame();
+    }
+  }, [phase]);
+
+  const sendMessage = async (text, isGuessAttempt = false) => {
+    if (!text || !text.trim()) return;
+    setLoading(true);
+    setError(null);
+    const userMsg = isGuessAttempt
+      ? (state.language === 'it' ? `Provo a indovinare: il personaggio è "${text.trim()}"?` : `My guess: is it "${text.trim()}"?`)
+      : text.trim();
+
+    const newHistory = [...history, { role: 'user', content: userMsg }];
+
+    try {
+      const sys = buildSystemPrompt();
+      const apiHistory = newHistory.map(h => ({ role: h.role, content: h.content }));
+      const response = await callClaude(state.apiKey, sys, apiHistory);
+      const parsed = extractJSON(response);
+      if (!parsed) {
+        throw new Error('Risposta non valida: ' + response.slice(0, 150));
+      }
+
+      const finalHistory = [...newHistory, { role: 'assistant', content: response }];
+      setHistory(finalHistory);
+
+      if (isGuessAttempt) {
+        if (parsed.correct === true) {
+          const ns = { ...state, stats: { ...state.stats, wins: state.stats.wins + 1 } };
+          setState(ns); saveState(ns);
+          setRevealedChar(parsed.character || text.trim());
+          setEndResult('isabel_won');
+          setPhase('end');
+          setLoading(false);
+          return;
+        }
+        setLastResponse({
+          type: 'guess_wrong',
+          manaLine: parsed.manaLine || t.iLose,
+          expression: parsed.expression || 'happy',
+        });
+        if (finalHistory.filter(h => h.role === 'user').length >= maxQ) {
+          const ns = { ...state, stats: { ...state.stats, losses: state.stats.losses + 1 } };
+          setState(ns); saveState(ns);
+          setRevealedChar(parsed.character);
+          setEndResult('claude_won');
+          setPhase('end');
+          setLoading(false);
+          return;
+        }
+      } else {
+        setLastResponse({
+          type: 'answer',
+          answer: parsed.answer || '?',
+          manaLine: parsed.manaLine || '',
+          expression: parsed.expression || 'curious',
+        });
+        if (finalHistory.filter(h => h.role === 'user').length >= maxQ) {
+          const ns = { ...state, stats: { ...state.stats, losses: state.stats.losses + 1 } };
+          setState(ns); saveState(ns);
+          setRevealedChar(parsed.character);
+          setEndResult('claude_won');
+          setPhase('end');
+          setLoading(false);
+          return;
+        }
+      }
+      setLoading(false);
+      setCurrentInput('');
+      setGuessText('');
+      setShowGuessInput(false);
+    } catch (e) {
+      setError(e.message);
+      setLoading(false);
+    }
+  };
+
+  // INIT
+  if (phase === 'init') {
+    return (
+      <div className="page">
+        <div className="tarot-card fade-in">
+          <div className="tarot-card-inner">
+            <Corners />
+            <div className="font-label" style={{ fontSize: '10px', color: 'var(--gold)', textAlign: 'center', marginBottom: '10px' }}>
+              {t.isabelMode}
+            </div>
+            {!error ? (
+              <>
+                <Mana expression="thinking" size="normal" talking />
+                <div className="font-italic pulse-anim" style={{ fontSize: '22px', color: 'var(--gold-bright)', textAlign: 'center', marginTop: '20px', letterSpacing: '2px' }}>
+                  {t.thinking}...
+                </div>
+                <div className="font-italic" style={{ fontSize: '16px', color: 'rgba(245,236,217,0.6)', textAlign: 'center', marginTop: '8px' }}>
+                  {t.consult}
+                </div>
+              </>
+            ) : (
+              <div style={{ padding: '20px 0', textAlign: 'center' }}>
+                <div className="font-display" style={{ fontSize: '24px', color: 'var(--error)', marginBottom: '12px' }}>{t.error}</div>
+                <div className="font-italic" style={{ fontSize: '15px', color: 'var(--cream)', marginBottom: '16px', wordBreak: 'break-word', padding: '0 10px' }}>
+                  {error.length > 200 ? error.slice(0, 200) + '...' : error}
+                </div>
+                <button className="btn-mystic gold small" onClick={() => { setError(null); initGame(); }}>{t.errorRetry}</button>
+                <button className="btn-mystic small" onClick={onExit}>{t.home}</button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // END
+  if (phase === 'end') {
+    const isWin = endResult === 'isabel_won';
+    const message = isWin ? t.iWin : t.iLose;
+    const manaMsg = isWin ? t.iWinMana : t.iLoseMana;
+    const manaExp = isWin ? 'sad' : 'happy';
+    return (
+      <div className="page">
+        <div className="tarot-card fade-in-scale">
+          <div className="tarot-card-inner">
+            <Corners />
+            <Mana expression={manaExp} size="normal" />
+            <div className="font-display" style={{ fontSize: 'clamp(36px, 9vw, 48px)', color: 'var(--gold-bright)', textAlign: 'center', marginTop: '20px', letterSpacing: '4px', textShadow: '0 0 20px rgba(224, 193, 120, 0.5)' }}>
+              {message}
+            </div>
+            <SpeechBubble text={manaMsg} />
+            {revealedChar && (
+              <div style={{ margin: '20px 0', padding: '14px', border: '1px dashed var(--gold)', textAlign: 'center' }}>
+                <div className="font-label" style={{ fontSize: '9px', color: 'var(--gold)', marginBottom: '8px' }}>
+                  {t.revealedChar}
+                </div>
+                <div className="font-display" style={{ fontSize: '24px', color: 'var(--gold-bright)', textShadow: '0 0 15px rgba(224, 193, 120, 0.5)', letterSpacing: '3px' }}>
+                  ✦ {revealedChar} ✦
+                </div>
+              </div>
+            )}
+            <div className="font-italic" style={{ fontSize: '17px', textAlign: 'center', color: 'var(--cream)', margin: '14px 0' }}>
+              {state.language === 'it' ? `Domande usate: ${questionCount}/${maxQ}` : `Questions used: ${questionCount}/${maxQ}`}
+            </div>
+            <div style={{ marginTop: '18px' }}>
+              <button className="btn-mystic gold" onClick={() => {
+                setHistory([]); setLastResponse(null); setEndResult(null); setRevealedChar(null);
+                setError(null); setPhase('init');
+              }}>{t.newGame}</button>
+              <button className="btn-mystic" onClick={onExit}>{t.home}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // PLAYING
+  const progress = (questionCount / maxQ) * 100;
+  const manaExpr = loading ? 'thinking' : (lastResponse?.expression || 'curious');
+
+  return (
+    <div className="page">
+      <div className="tarot-card fade-in">
+        <div className="tarot-card-inner">
+          <Corners />
+
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingBottom: '14px', borderBottom: '1px solid rgba(201, 169, 97, 0.3)', marginBottom: '14px' }}>
+            <div className="font-display" style={{ fontSize: '20px', color: 'var(--gold-bright)', whiteSpace: 'nowrap', letterSpacing: '2px' }}>
+              {questionCount} / {maxQ}
+            </div>
+            <div style={{ flex: 1, height: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--gold-soft)', position: 'relative' }}>
+              <div style={{ height: '100%', width: progress + '%', background: 'linear-gradient(90deg, var(--gold-soft), var(--gold-bright))', boxShadow: '0 0 8px var(--gold)', transition: 'width 0.4s' }}></div>
+            </div>
+            <div onClick={() => setConfirmExit(true)} className="font-label" style={{ fontSize: '11px', color: 'var(--burgundy-light)', cursor: 'pointer', border: '1px solid var(--burgundy-light)', padding: '3px 9px', letterSpacing: '2px' }}>
+              ✕
+            </div>
+          </div>
+
+          <Mana expression={manaExpr} size="small" talking={loading} />
+
+          {/* Last response */}
+          {lastResponse && !loading && (
+            <div className="fade-in" style={{
+              margin: '14px 0 18px',
+              padding: '16px 14px',
+              position: 'relative',
+              background: 'rgba(0, 0, 0, 0.2)',
+              border: '1px solid rgba(201, 169, 97, 0.4)',
+            }}>
+              <span style={{ position: 'absolute', top: -1, left: -1, width: '18px', height: '18px', borderTop: '1px solid var(--gold)', borderLeft: '1px solid var(--gold)' }}></span>
+              <span style={{ position: 'absolute', bottom: -1, right: -1, width: '18px', height: '18px', borderBottom: '1px solid var(--gold)', borderRight: '1px solid var(--gold)' }}></span>
+
+              {lastResponse.type === 'intro' && (
+                <>
+                  <div className="font-display" style={{ fontSize: '22px', color: 'var(--gold-bright)', textAlign: 'center', letterSpacing: '2px', marginBottom: '6px' }}>
+                    ✦ {t.claudeChose} ✦
+                  </div>
+                  <div className="font-italic" style={{ fontSize: '16px', color: 'var(--cream)', textAlign: 'center' }}>
+                    {lastResponse.manaLine || t.claudeChoseSub}
+                  </div>
+                </>
+              )}
+              {lastResponse.type === 'answer' && (
+                <>
+                  <div className="font-label" style={{ fontSize: '9px', color: 'var(--gold)', textAlign: 'center', marginBottom: '8px' }}>
+                    {t.yourAnswer}
+                  </div>
+                  <div className="font-display" style={{ fontSize: '28px', color: 'var(--gold-bright)', textAlign: 'center', letterSpacing: '4px', textShadow: '0 0 15px rgba(224, 193, 120, 0.4)' }}>
+                    {lastResponse.answer.toUpperCase()}
+                  </div>
+                  {lastResponse.manaLine && (
+                    <div className="font-italic" style={{ fontSize: '15px', color: 'rgba(245,236,217,0.8)', textAlign: 'center', marginTop: '6px' }}>
+                      ~ {lastResponse.manaLine} ~
+                    </div>
+                  )}
+                </>
+              )}
+              {lastResponse.type === 'guess_wrong' && (
+                <>
+                  <div className="font-display" style={{ fontSize: '22px', color: 'var(--error)', textAlign: 'center', letterSpacing: '2px' }}>
+                    ✗ {t.iLose}
+                  </div>
+                  {lastResponse.manaLine && (
+                    <div className="font-italic" style={{ fontSize: '15px', color: 'var(--cream)', textAlign: 'center', marginTop: '6px' }}>
+                      ~ {lastResponse.manaLine} ~
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Loading */}
+          {loading && (
+            <div style={{ padding: '14px 0', textAlign: 'center' }}>
+              <div className="font-italic pulse-anim" style={{ fontSize: '18px', color: 'var(--gold-bright)', letterSpacing: '2px' }}>
+                {t.thinking}...
+              </div>
+            </div>
+          )}
+
+          {/* Error */}
+          {error && !loading && (
+            <div style={{ padding: '14px 0', textAlign: 'center' }}>
+              <div className="font-display" style={{ fontSize: '20px', color: 'var(--error)', marginBottom: '10px' }}>{t.error}</div>
+              <div className="font-italic" style={{ fontSize: '14px', color: 'var(--cream)', marginBottom: '12px', wordBreak: 'break-word', padding: '0 10px' }}>
+                {error.length > 200 ? error.slice(0, 200) + '...' : error}
+              </div>
+              <button className="btn-mystic gold small" onClick={() => setError(null)}>{t.errorRetry}</button>
+            </div>
+          )}
+
+          {/* Input area */}
+          {!loading && !error && (
+            <>
+              {!showGuessInput ? (
+                <div className="fade-in">
+                  <div className="font-label" style={{ fontSize: '10px', color: 'var(--gold)', marginBottom: '8px' }}>
+                    ▼ {t.askQuestion}
+                  </div>
+                  <textarea
+                    value={currentInput}
+                    onChange={e => setCurrentInput(e.target.value)}
+                    placeholder={t.askPlaceholder}
+                    rows="2"
+                    style={{ resize: 'none' }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        if (currentInput.trim()) sendMessage(currentInput, false);
+                      }
+                    }}
+                  />
+                  <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <button className="btn-mystic small" onClick={() => sendMessage(currentInput, false)} disabled={!currentInput.trim()}>
+                      {t.askBtn}
+                    </button>
+                    <button className="btn-mystic gold small" onClick={() => { setShowGuessInput(true); setCurrentInput(''); }}>
+                      {t.iGuess}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="fade-in">
+                  <div className="font-label" style={{ fontSize: '10px', color: 'var(--gold-bright)', marginBottom: '8px' }}>
+                    ✦ {t.yourGuess}
+                  </div>
+                  <input
+                    type="text"
+                    value={guessText}
+                    onChange={e => setGuessText(e.target.value)}
+                    placeholder={t.guessPlaceholder}
+                    style={{ borderColor: 'var(--gold-bright)' }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && guessText.trim()) {
+                        sendMessage(guessText, true);
+                      }
+                    }}
+                  />
+                  <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <button className="btn-mystic small" onClick={() => { setShowGuessInput(false); setGuessText(''); }}>
+                      {t.cancel}
+                    </button>
+                    <button className="btn-mystic gold small" onClick={() => sendMessage(guessText, true)} disabled={!guessText.trim()}>
+                      {t.submitGuess}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      {confirmExit && (
+        <Modal onClose={() => setConfirmExit(false)}>
+          <div className="tarot-card">
+            <div className="tarot-card-inner">
+              <Corners />
+              <div className="font-display" style={{ fontSize: '24px', color: 'var(--error)', textAlign: 'center', marginBottom: '20px' }}>
+                {t.confirmExit}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <button className="btn-mystic small" onClick={() => setConfirmExit(false)}>{t.no2}</button>
+                <button className="btn-mystic danger small" onClick={onExit}>{t.yes2}</button>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+};
+
+// ============================================================
+// APP ROOT
+// ============================================================
+const App = () => {
+  const [state, setState] = useState(loadState());
+  const [screen, setScreen] = useState('home');
+
+  const onStart = (mode) => {
+    if (mode === 'claude') setScreen('claude');
+    else setScreen('isabel');
+  };
+
+  if (screen === 'claude') return <ClaudeGuessesMode state={state} setState={setState} onExit={() => setScreen('home')} />;
+  if (screen === 'isabel') return <IsabelGuessesMode state={state} setState={setState} onExit={() => setScreen('home')} />;
+  return <Home state={state} setState={setState} onStart={onStart} />;
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed:', err));
+    });
+  }
+</script>
+
+</body>
+</html>
