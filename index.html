@@ -432,14 +432,11 @@ const saveState = (s) => {
 // ============================================================
 // API CALL
 // ============================================================
-async function callClaude(apiKey, systemPrompt, messages) {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+async function callClaude(systemPrompt, messages) {
+  const response = await fetch('/api/chat', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
     },
     body: JSON.stringify({
       model: 'claude-opus-4-5',
@@ -449,8 +446,8 @@ async function callClaude(apiKey, systemPrompt, messages) {
     }),
   });
   if (!response.ok) {
-    const errText = await response.text();
-    throw new Error('API ' + response.status + ': ' + errText.slice(0, 300));
+    const errData = await response.json().catch(() => ({}));
+    throw new Error('API ' + response.status + ': ' + (errData.error || 'unknown error'));
   }
   const data = await response.json();
   return data.content.filter(c => c.type === 'text').map(c => c.text).join('\n');
@@ -729,10 +726,6 @@ const Home = ({ state, setState, onStart }) => {
   const winRate = totalGames > 0 ? Math.round((state.stats.wins / totalGames) * 100) : 0;
 
   const tryStart = (mode) => {
-    if (!state.apiKey || !state.apiKey.trim()) {
-      setShowError(t.needApiKey);
-      return;
-    }
     onStart(mode);
   };
 
@@ -860,13 +853,12 @@ const Home = ({ state, setState, onStart }) => {
 // ============================================================
 const Settings = ({ state, setState, onClose }) => {
   const t = T[state.language];
-  const [apiKey, setApiKey] = useState(state.apiKey);
   const [maxQ, setMaxQ] = useState(state.maxQuestions);
   const [lang, setLang] = useState(state.language);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const save = () => {
-    const ns = { ...state, apiKey: apiKey.trim(), maxQuestions: Math.max(5, Math.min(50, parseInt(maxQ) || 20)), language: lang };
+    const ns = { ...state, maxQuestions: Math.max(5, Math.min(50, parseInt(maxQ) || 20)), language: lang };
     setState(ns);
     saveState(ns);
     onClose();
@@ -887,16 +879,6 @@ const Settings = ({ state, setState, onClose }) => {
           {t.settingsTitle}
         </div>
         <div className="divider"><span className="divider-sym">✦</span></div>
-
-        <div style={{ marginTop: '20px' }}>
-          <label className="font-label" style={{ fontSize: '9px', color: 'var(--gold)', display: 'block', marginBottom: '8px' }}>
-            {t.apiKey}
-          </label>
-          <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder={t.apiKeyPh} />
-          <div className="font-italic" style={{ fontSize: '15px', color: 'rgba(245,236,217,0.6)', marginTop: '6px' }}>
-            {t.apiKeyHelp}
-          </div>
-        </div>
 
         <div style={{ marginTop: '20px' }}>
           <label className="font-label" style={{ fontSize: '9px', color: 'var(--gold)', display: 'block', marginBottom: '8px' }}>
@@ -1026,7 +1008,7 @@ Examples in Italian:
     try {
       const sys = buildSystemPrompt();
       const msgs = buildMessages();
-      const response = await callClaude(state.apiKey, sys, msgs);
+      const response = await callClaude(sys, msgs);
       const parsed = extractJSON(response);
       if (!parsed || !parsed.action || !parsed.text) {
         throw new Error('Risposta non valida: ' + response.slice(0, 150));
@@ -1391,7 +1373,7 @@ CRITICAL:
       const initMsg = state.language === 'it'
         ? "Iniziamo! Scegli un personaggio segreto."
         : "Let's start! Pick a secret character.";
-      const response = await callClaude(state.apiKey, sys, [{ role: 'user', content: initMsg }]);
+      const response = await callClaude(sys, [{ role: 'user', content: initMsg }]);
       const parsed = extractJSON(response);
       if (!parsed || parsed.action !== 'start' || !parsed.character) {
         throw new Error('Risposta non valida: ' + response.slice(0, 150));
@@ -1433,7 +1415,7 @@ CRITICAL:
     try {
       const sys = buildSystemPrompt();
       const apiHistory = newHistory.map(h => ({ role: h.role, content: h.content }));
-      const response = await callClaude(state.apiKey, sys, apiHistory);
+      const response = await callClaude(sys, apiHistory);
       const parsed = extractJSON(response);
       if (!parsed) {
         throw new Error('Risposta non valida: ' + response.slice(0, 150));
