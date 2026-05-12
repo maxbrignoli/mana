@@ -1061,11 +1061,44 @@ REMEMBER: keep "manaLine" mystical/poetic, but keep "text" (the actual question)
   const buildMessages = () => {
     const lines = history.map((h, i) => {
       if (h.type === 'question') return `Q${i+1}: ${h.text}\nIsabel: ${h.answer}`;
-      return `Q${i+1} (guess): "${h.text}"\nIsabel: ${h.answer}`;
+      return `Q${i+1} (GUESS attempt): "${h.text}"\nIsabel: ${h.answer}`;
     });
+
+    // Analizzo i guess sbagliati nella coda della storia (consecutivi a partire dall'ultimo)
+    let consecutiveWrongGuesses = 0;
+    const wrongGuessNames = [];
+    for (let i = history.length - 1; i >= 0; i--) {
+      const h = history[i];
+      if (h.type === 'guess') {
+        // È un guess sbagliato (se fosse stato giusto la partita sarebbe finita)
+        consecutiveWrongGuesses++;
+        wrongGuessNames.unshift(h.text);
+      } else {
+        break; // appena trovo una domanda non-guess, interrompo
+      }
+    }
+
+    let constraintLine = '';
+    if (consecutiveWrongGuesses === 1) {
+      const isIt = state.language === 'it';
+      constraintLine = isIt
+        ? `\n\n⚠️ ATTENZIONE: hai appena sbagliato il guess "${wrongGuessNames[0]}". È VIETATO fare un altro guess immediato. La tua prossima mossa DEVE essere una DOMANDA di restringimento, non un guess. Usa il fatto che "${wrongGuessNames[0]}" è sbagliato come informazione per restringere.`
+        : `\n\n⚠️ WARNING: you just made a wrong guess "${wrongGuessNames[0]}". You are FORBIDDEN from making another guess immediately. Your next move MUST be a narrowing QUESTION, not a guess. Use the fact that "${wrongGuessNames[0]}" is wrong as information to narrow down.`;
+    } else if (consecutiveWrongGuesses === 2) {
+      const isIt = state.language === 'it';
+      constraintLine = isIt
+        ? `\n\n🚨 STOP: hai sbagliato DUE guess consecutivi (${wrongGuessNames.join(', ')}). È ASSOLUTAMENTE VIETATO fare un altro guess. Devi fare almeno DUE domande di restringimento prima del prossimo tentativo. Riconsidera la tua strategia: forse hai sbagliato categoria. Torna alle Fasi 1-2: forse il personaggio non è del dominio che pensavi.`
+        : `\n\n🚨 STOP: you made TWO wrong guesses in a row (${wrongGuessNames.join(', ')}). You are ABSOLUTELY FORBIDDEN from making another guess. You must ask at least TWO narrowing questions before any other guess attempt. Reconsider your strategy: maybe you got the wrong category. Go back to Phases 1-2: maybe the character is not from the domain you thought.`;
+    } else if (consecutiveWrongGuesses >= 3) {
+      const isIt = state.language === 'it';
+      constraintLine = isIt
+        ? `\n\n🚨🚨 ALLARME ROSSO: hai sbagliato ${consecutiveWrongGuesses} guess consecutivi (${wrongGuessNames.join(', ')}). Stai sprecando le domande. È ASSOLUTAMENTE VIETATO un altro guess per i prossimi 3 turni. La tua strategia ha fallito completamente: TORNA ALLA FASE 1 e ricategorizza da zero. Fai una domanda di MASSIMA ampiezza per ripartire. Ignora qualunque "hunch" tu abbia avuto: stavi sbagliando categoria.`
+        : `\n\n🚨🚨 RED ALERT: you made ${consecutiveWrongGuesses} consecutive wrong guesses (${wrongGuessNames.join(', ')}). You're burning questions. You are ABSOLUTELY FORBIDDEN from guessing for the next 3 turns. Your strategy completely failed: GO BACK TO PHASE 1 and recategorize from scratch. Ask a MAX-BREADTH question to restart. Ignore any "hunch" you had: you were in the wrong category.`;
+    }
+
     const summary = lines.length === 0
       ? `Game starting. You have ${maxQ} questions. Make your first move.`
-      : `Game in progress. ${questionCount}/${maxQ} questions used. ${maxQ - questionCount} remaining.\n\nHistory:\n${lines.join('\n\n')}\n\nWhat's your next move?`;
+      : `Game in progress. ${questionCount}/${maxQ} questions used. ${maxQ - questionCount} remaining.\n\nHistory:\n${lines.join('\n\n')}${constraintLine}\n\nWhat's your next move?`;
     return [{ role: 'user', content: summary }];
   };
 
