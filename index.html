@@ -1363,6 +1363,122 @@ CRITICAL:
 - Be truthful with guesses`;
   };
 
+  // Helper per gestire lo storico dei personaggi recenti scelti da Mana (anti-ripetizione)
+  const RECENT_CHARS_KEY = 'mana_recent_chars';
+  const MAX_RECENT = 15;
+
+  const getRecentCharacters = () => {
+    try {
+      const raw = localStorage.getItem(RECENT_CHARS_KEY);
+      if (!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+  };
+
+  const addRecentCharacter = (charName) => {
+    if (!charName || typeof charName !== 'string') return;
+    try {
+      const recent = getRecentCharacters();
+      // rimuovo eventuali duplicati e metto in testa
+      const filtered = recent.filter(c => c.toLowerCase() !== charName.toLowerCase());
+      const updated = [charName, ...filtered].slice(0, MAX_RECENT);
+      localStorage.setItem(RECENT_CHARS_KEY, JSON.stringify(updated));
+    } catch (e) {}
+  };
+
+  // Genera un seme casuale per variare i personaggi tra una partita e l'altra
+  const generateRandomSeed = () => {
+    const isIt = state.language === 'it';
+
+    // Categorie di personaggi (pesate per varietà)
+    const categories = isIt ? [
+      "un cartone animato Disney classico (non Pixar)",
+      "un film Pixar",
+      "un anime o manga giapponese",
+      "un videogioco Nintendo",
+      "un videogioco non Nintendo",
+      "un libro per ragazzi",
+      "una favola o fiaba tradizionale",
+      "una serie animata per bambini",
+      "un cartone animato moderno (post 2010)",
+      "un cartone animato anni '80 o '90",
+      "un personaggio italiano (es. Calimero, Pimpa, Geronimo Stilton)",
+      "un supereroe Marvel",
+      "un personaggio DC Comics",
+      "un personaggio di Harry Potter",
+      "un personaggio di Star Wars",
+      "un animale famoso (reale o di finzione)",
+      "un personaggio storico realmente esistito",
+      "una creatura mitologica",
+      "un personaggio di un musical o di un film classico",
+      "un Pokémon (ma non Pikachu!)",
+    ] : [
+      "a classic Disney animated character (not Pixar)",
+      "a Pixar movie character",
+      "a Japanese anime or manga character",
+      "a Nintendo video game character",
+      "a non-Nintendo video game character",
+      "a children's book character",
+      "a traditional fairy tale character",
+      "an animated TV series character for kids",
+      "a modern cartoon (post 2010)",
+      "an 80s or 90s cartoon character",
+      "a famous animal (real or fictional)",
+      "a Marvel superhero",
+      "a DC Comics character",
+      "a Harry Potter character",
+      "a Star Wars character",
+      "a real historical figure kids would know",
+      "a mythological creature",
+      "a classic musical or movie character",
+      "a Pokémon (but NOT Pikachu!)",
+    ];
+
+    // Vincoli aggiuntivi per ulteriore varietà
+    const constraints = isIt ? [
+      "Evita assolutamente i personaggi più ovvi e famosissimi come Topolino, Pikachu, Super Mario, Harry Potter, Spider-Man.",
+      "Scegli un personaggio che NON sia il protagonista principale ma un personaggio secondario noto.",
+      "Scegli un personaggio femminile.",
+      "Scegli un personaggio maschile.",
+      "Scegli un personaggio non umano (animale, robot, creatura, alieno).",
+      "Scegli un personaggio che sia un antagonista o cattivo.",
+      "Scegli un personaggio che possiede poteri speciali.",
+      "Scegli un personaggio che NON ha poteri speciali.",
+      "Scegli un personaggio buono e positivo.",
+      "Scegli un personaggio molto famoso ma non scontato.",
+    ] : [
+      "Avoid the most obvious super-famous characters like Mickey Mouse, Pikachu, Super Mario, Harry Potter, Spider-Man.",
+      "Choose a well-known SECONDARY character, not the main protagonist.",
+      "Choose a female character.",
+      "Choose a male character.",
+      "Choose a non-human character (animal, robot, creature, alien).",
+      "Choose an antagonist or villain.",
+      "Choose a character with special powers.",
+      "Choose a character WITHOUT special powers.",
+      "Choose a positive, good character.",
+      "Choose a famous character but not the obvious choice.",
+    ];
+
+    const category = categories[Math.floor(Math.random() * categories.length)];
+    const constraint = constraints[Math.floor(Math.random() * constraints.length)];
+    const recent = getRecentCharacters();
+
+    let avoidLine = '';
+    if (recent.length > 0) {
+      if (isIt) {
+        avoidLine = ` IMPORTANTE: NON scegliere nessuno di questi personaggi già usati di recente: ${recent.join(', ')}.`;
+      } else {
+        avoidLine = ` IMPORTANT: do NOT pick any of these recently used characters: ${recent.join(', ')}.`;
+      }
+    }
+
+    if (isIt) {
+      return `Per QUESTA partita specifica, scegli un personaggio da questa categoria: ${category}. ${constraint}${avoidLine} Non ripetere personaggi banali e scontati. Sii creativa nella scelta!`;
+    }
+    return `For THIS specific game, pick a character from this category: ${category}. ${constraint}${avoidLine} Don't pick boring obvious characters. Be creative!`;
+  };
+
   const initGame = async () => {
     if (initInProgressRef.current) return;
     initInProgressRef.current = true;
@@ -1370,14 +1486,17 @@ CRITICAL:
     setError(null);
     try {
       const sys = buildSystemPrompt();
+      const seed = generateRandomSeed();
       const initMsg = state.language === 'it'
-        ? "Iniziamo! Scegli un personaggio segreto."
-        : "Let's start! Pick a secret character.";
+        ? `Iniziamo! Scegli un personaggio segreto.\n\n${seed}`
+        : `Let's start! Pick a secret character.\n\n${seed}`;
       const response = await callClaude(sys, [{ role: 'user', content: initMsg }]);
       const parsed = extractJSON(response);
       if (!parsed || parsed.action !== 'start' || !parsed.character) {
         throw new Error('Risposta non valida: ' + response.slice(0, 150));
       }
+      // Memorizzo il personaggio scelto nella blacklist anti-ripetizione
+      addRecentCharacter(parsed.character);
       setHistory([
         { role: 'user', content: initMsg },
         { role: 'assistant', content: response },
